@@ -1,49 +1,63 @@
 ﻿#include <iostream>
 #include <Windows.h>
 
+bool pause = false;
+bool debug = false;
+int music_LENGHT = 65; // seconds;
+int music_PLAYED = 0;
+
+// P - stop/play, D - debug;
+
 time_t verify_time() {
 	time_t t = time(nullptr);
 	return t;
 }
 
-void print(int music_PLAYED, int music_LENGHT, bool status) {
+struct Elements {
+	std::string filled = ">";
+	char empty = ' ';
+} e;
+
+void print(int music_PLAYED, int music_LENGHT, bool status, bool debug) {
 	system("cls");
-	double progress_per = ((music_PLAYED * 100) / music_LENGHT/2.4);
-	std::string progress_str;
-	std::string stick = "-----------------------------------------";
-	for (int i = 0; i < stick.size() - 2; i++) {
-		if (i < progress_per) {
-			progress_str += '>';
-		}
-		else progress_str += ' ';
+	double percentage = (static_cast<double>(music_PLAYED) / music_LENGHT) * 100;
+	std::string stick = "-------------------------------------";
+	std::string progress;
+	int progress_SIZE = (stick.size()*static_cast<int>(percentage))/100;
+	for (int i = 0; i < stick.size()-2; i++) {
+		if (i < progress_SIZE) progress += e.filled;
+		else progress += e.empty;
 	}
 	std::cout << stick << '\n';
-	std::cout << "|" << progress_str << "|\n";
+	std::cout << '|' << progress << "|\n";
 	std::cout << stick << '\n';
-	if (status) std::cout << "[ PAUSED ] " << music_PLAYED << "/" << music_LENGHT << "sec\n";
-	else std::cout << "[ PLAYING ] " << music_PLAYED << "/" << music_LENGHT << "sec\n";
-	std::cout << "[ PERCENTAGE ~ ] " << ((progress_per / stick.size())*100)-1 << "%" << "\n";
+	if (status) std::cout << "\t[ PAUSED ] " << music_PLAYED << "/" << music_LENGHT << "sec\n";
+	else std::cout << "\t[ PLAYING ] " << music_PLAYED << "/" << music_LENGHT << "sec\n";
+	if (debug) {
+		std::cout << "\t[ PERCENTAGE ] " << percentage << "%" << "\n";
+		std::cout << "\t[ FILLED ] " << progress_SIZE << "/" << stick.size() << "\n";
+	}
 }
 
 int main(int argc, char* argv[]) {
-	int music_LENGHT = 200; // sec
-	int music_PLAYED = 0; // sec
-	bool pause = false;
 	time_t t = 0;
 	while (music_PLAYED != music_LENGHT) {
 		if (!pause) {
 			if (verify_time() != t) {
 				music_PLAYED++;
-				print(music_PLAYED, music_LENGHT, pause);
+				print(music_PLAYED, music_LENGHT, pause, debug);
 				t = verify_time();
 			}
 		}
-		if (GetAsyncKeyState('S') & 0x001) {
-			pause = false;
-		}
 		if (GetAsyncKeyState('P') & 0x001) {
-			pause = true;
-			print(music_PLAYED, music_LENGHT, pause);
+			if (!pause) pause = true;
+			else pause = false;
+			print(music_PLAYED, music_LENGHT, pause, debug);
+		}
+		if (GetAsyncKeyState('D') & 0x001) {
+			if (!debug) debug = true;
+			else debug = false;
+			print(music_PLAYED, music_LENGHT, pause, debug);
 		}
 	}
 
